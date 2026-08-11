@@ -1,43 +1,61 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Tool from '@/models/Tool';
+import dbConnect from "@/lib/db";
+import Tool from "@/models/Tool";
+import { NextResponse } from "next/server";
 
-// GET /api/tools - Fetch all tool listings
-export async function GET() {
+// PUT: Update an existing tool listing
+export async function PUT(request, context) {
   try {
     await dbConnect();
-    const tools = await Tool.find({}).sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, data: tools || [] });
+    
+    // Await params for Next.js App Router compatibility in production (Vercel)
+    const params = await context.params;
+    const { id } = params;
+    
+    const body = await request.json();
+
+    const updatedTool = await Tool.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedTool) {
+      return NextResponse.json(
+        { success: false, error: "Tool not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: updatedTool });
   } catch (error) {
-    console.error('GET /api/tools Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Database error' },
-      { status: 500 }
+      { success: false, error: error.message },
+      { status: 400 }
     );
   }
 }
 
-// POST /api/tools - List a new tool
-export async function POST(request) {
+// DELETE: Delete a tool listing
+export async function DELETE(request, context) {
   try {
     await dbConnect();
-    const body = await request.json();
+    
+    // Await params for Next.js App Router compatibility in production (Vercel)
+    const params = await context.params;
+    const { id } = params;
 
-    // Listings created from the form do not collect a location yet. Keep them
-    // visible on the map by using the map's default Bengaluru center until a
-    // location picker is added.
-    const toolData = {
-      ...body,
-      lat: body.lat ?? 12.9716,
-      lng: body.lng ?? 77.5946,
-    };
+    const deletedTool = await Tool.findByIdAndDelete(id);
 
-    const newTool = await Tool.create(toolData);
-    return NextResponse.json({ success: true, data: newTool }, { status: 201 });
+    if (!deletedTool) {
+      return NextResponse.json(
+        { success: false, error: "Tool not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: {} });
   } catch (error) {
-    console.error('POST /api/tools Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create tool' },
+      { success: false, error: error.message },
       { status: 400 }
     );
   }

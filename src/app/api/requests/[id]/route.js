@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Request from '@/models/Request';
+import dbConnect from "@/lib/db";
+import Request from "@/models/Request";
+import { NextResponse } from "next/server";
 
-export async function PUT(request, { params }) {
+// PUT: Update an existing borrowing request (e.g., update status or mark returned)
+export async function PUT(request, context) {
   try {
     await dbConnect();
-    const { id } = await params;
+    
+    // Await params for Next.js App Router compatibility on Vercel
+    const params = await context.params;
+    const { id } = params;
+    
     const body = await request.json();
 
     const updatedRequest = await Request.findByIdAndUpdate(id, body, {
@@ -15,7 +20,7 @@ export async function PUT(request, { params }) {
 
     if (!updatedRequest) {
       return NextResponse.json(
-        { success: false, error: 'Request record not found' },
+        { success: false, error: "Request not found" },
         { status: 404 }
       );
     }
@@ -29,25 +34,25 @@ export async function PUT(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+// DELETE: Delete a borrowing request
+export async function DELETE(request, context) {
   try {
     await dbConnect();
-    const { id } = await params;
+    
+    // Await params for Next.js App Router compatibility on Vercel
+    const params = await context.params;
+    const { id } = params;
 
     const deletedRequest = await Request.findByIdAndDelete(id);
 
     if (!deletedRequest) {
       return NextResponse.json(
-        { success: false, error: 'Request record not found' },
+        { success: false, error: "Request not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Request deleted successfully',
-      data: deletedRequest,
-    });
+    return NextResponse.json({ success: true, data: {} });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
