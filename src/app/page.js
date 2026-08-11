@@ -31,15 +31,17 @@ export default function Home() {
   const [editingTool, setEditingTool] = useState(null);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
 
-  // Fetch tools from MongoDB API
+  // Fetch tools from MongoDB API (or fallback store)
   const fetchTools = async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/tools');
-      if (!res.ok) throw new Error('Network response was not ok');
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success) {
         setTools(data.data || []);
+      } else {
+        console.error('Error fetching tools:', data?.error || res.statusText);
       }
     } catch (err) {
       console.error('Error fetching tools:', err);
@@ -60,15 +62,19 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newToolData),
       });
-      const data = await res.json();
-      if (data.success) {
-        setIsAddModalOpen(false);
-        fetchTools();
-      } else {
-        alert('Failed to add tool: ' + (data.error || 'Unknown error'));
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || 'The server could not save this listing.');
       }
+
+      // Show the new listing right away, even if a follow-up refresh is slow.
+      setTools((currentTools) => [data.data, ...currentTools]);
+      setIsAddModalOpen(false);
+      void fetchTools();
     } catch (err) {
       console.error('Error adding tool:', err);
+      alert(`Failed to add tool: ${err.message || 'Please try again.'}`);
     }
   };
 
@@ -199,8 +205,11 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      const reqData = await reqRes.json().catch(() => null);
 
-      if (!reqRes.ok) throw new Error('Booking request failed');
+      if (!reqRes.ok || !reqData?.success) {
+        throw new Error(reqData?.error || 'Booking request failed');
+      }
 
       // 2. Update Tool Status to Booked
       if (payload.toolId) {

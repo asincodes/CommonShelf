@@ -1,62 +1,60 @@
-import dbConnect from "@/lib/db";
-import Tool from "@/models/Tool";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import dbConnect from '@/lib/db';
+import Tool from '@/models/Tool';
+import { getMemoryTools, addMemoryTool } from '@/lib/store';
 
-// PUT: Update an existing tool listing
-export async function PUT(request, context) {
+// GET /api/tools - Fetch all tool listings
+export async function GET() {
   try {
     await dbConnect();
-    
-    // Await params for Next.js App Router compatibility in production (Vercel)
-    const params = await context.params;
-    const { id } = params;
-    
-    const body = await request.json();
+    const tools = await Tool.find({}).sort({ createdAt: -1 });
 
-    const updatedTool = await Tool.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
+    return NextResponse.json({
+      success: true,
+      data: tools,
+    });
+  } catch (error) {
+    console.warn('Failed to fetch tools from MongoDB, using fallback memory store:', error.message);
+
+    return NextResponse.json({
+      success: true,
+      data: getMemoryTools(),
+      fallback: true,
+    });
+  }
+}
+
+// POST /api/tools - Create a new tool listing
+export async function POST(request) {
+  const body = await request.json().catch(() => ({}));
+  try {
+    await dbConnect();
+
+    const tool = await Tool.create({
+      ...body,
+      lat: Number.isFinite(Number(body.lat)) ? Number(body.lat) : 12.9716,
+      lng: Number.isFinite(Number(body.lng)) ? Number(body.lng) : 77.5946,
     });
 
-    if (!updatedTool) {
-      return NextResponse.json(
-        { success: false, error: "Tool not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: updatedTool });
-  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 400 }
+      {
+        success: true,
+        data: tool,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.warn('Failed to create tool in MongoDB, using fallback memory store:', error.message);
+
+    const fallbackTool = addMemoryTool(body);
+    return NextResponse.json(
+      {
+        success: true,
+        data: fallbackTool,
+        fallback: true,
+      },
+      { status: 201 }
     );
   }
 }
 
-// DELETE: Delete a tool listing
-export async function DELETE(request, context) {
-  try {
-    await dbConnect();
-    
-    // Await params for Next.js App Router compatibility in production (Vercel)
-    const params = await context.params;
-    const { id } = params;
-
-    const deletedTool = await Tool.findByIdAndDelete(id);
-
-    if (!deletedTool) {
-      return NextResponse.json(
-        { success: false, error: "Tool not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: {} });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 400 }
-    );
-  }
-}

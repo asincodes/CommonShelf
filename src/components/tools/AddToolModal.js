@@ -10,10 +10,13 @@ export default function AddToolModal({ onClose, onAddTool }) {
     imageUrl: '',
     status: 'Available',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.deposit) {
+    const deposit = Number(formData.deposit);
+
+    if (!formData.title.trim() || formData.deposit === '' || !Number.isFinite(deposit) || deposit < 0) {
       alert('Please fill in title and deposit fields!');
       return;
     }
@@ -23,11 +26,17 @@ export default function AddToolModal({ onClose, onAddTool }) {
       formData.imageUrl.trim() ||
       'https://images.unsplash.com/photo-1581141849291-312271b6e671?q=80&w=600';
 
-    onAddTool({
-      ...formData,
-      deposit: Number(formData.deposit),
-      imageUrl: finalImageUrl,
-    });
+    setIsSubmitting(true);
+    try {
+      await onAddTool({
+        ...formData,
+        title: formData.title.trim(),
+        deposit,
+        imageUrl: finalImageUrl,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,15 +156,17 @@ export default function AddToolModal({ onClose, onAddTool }) {
             <button
               type="button"
               onClick={onClose}
+              disabled={isSubmitting}
               className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg shadow-sm transition"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed rounded-lg shadow-sm transition"
             >
-              List Item
+              {isSubmitting ? 'Listing…' : 'List Item'}
             </button>
           </div>
         </form>
