@@ -230,9 +230,12 @@ export default function Home() {
 
   // Filter Logic
   const filteredTools = tools.filter((tool) => {
-    const matchesSearch = tool.title
-      ? tool.title.toLowerCase().includes(searchQuery.toLowerCase())
-      : false;
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      !q ||
+      (tool.title && tool.title.toLowerCase().includes(q)) ||
+      (tool.locationName && tool.locationName.toLowerCase().includes(q)) ||
+      (tool.category && tool.category.toLowerCase().includes(q));
 
     const categoryNorm = (selectedCategory || '').trim().toLowerCase();
     const toolCatNorm = (tool.category || '').trim().toLowerCase();

@@ -43,9 +43,9 @@ export default function ToolCard({ tool, onSelect, onEdit, onDelete, onReturn })
             {tool.title}
           </h3>
 
-          <div className="flex items-center gap-1 text-xs text-slate-500 mt-1 mb-3">
-            <MapPin size={12} />
-            <span>0.8 km away</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium mt-1 mb-3">
+            <MapPin size={13} className="text-emerald-600 shrink-0" />
+            <span className="truncate">{tool.locationName || tool.distance || 'Local Neighborhood'}</span>
           </div>
 
           <p className="text-sm text-slate-600 line-clamp-2 mb-4">

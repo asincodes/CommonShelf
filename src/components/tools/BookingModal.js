@@ -86,6 +86,10 @@ export default function BookingModal({ tool, onClose, onConfirmBooking }) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">{tool.category}</p>
+                <p className="text-xs text-slate-600 font-medium mt-1 flex items-center gap-1">
+                  <span>📍 Pickup Location:</span>
+                  <strong className="text-slate-800">{tool.locationName || 'Local Neighborhood'}</strong>
+                </p>
                 <p className="text-xs font-semibold text-slate-700 mt-1">
                   Security Deposit: <span className="text-emerald-600 font-bold">₹{tool.deposit}</span>
                 </p>

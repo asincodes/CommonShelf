@@ -1,5 +1,15 @@
 'use client';
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const LocationPickerMap = dynamic(() => import('../map/LocationPickerMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+      Loading Location Map Picker...
+    </div>
+  ),
+});
 
 export default function AddToolModal({ onClose, onAddTool }) {
   const [formData, setFormData] = useState({
@@ -7,8 +17,11 @@ export default function AddToolModal({ onClose, onAddTool }) {
     category: 'Power Tools',
     description: '',
     deposit: '',
+    locationName: 'Koramangala, Bengaluru',
     imageUrl: '',
     status: 'Available',
+    lat: 12.9716,
+    lng: 77.5946,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,7 +34,6 @@ export default function AddToolModal({ onClose, onAddTool }) {
       return;
     }
 
-    // Default image fallback if user leaves URL completely blank
     const finalImageUrl =
       formData.imageUrl.trim() ||
       'https://images.unsplash.com/photo-1581141849291-312271b6e671?q=80&w=600';
@@ -31,8 +43,11 @@ export default function AddToolModal({ onClose, onAddTool }) {
       await onAddTool({
         ...formData,
         title: formData.title.trim(),
+        locationName: formData.locationName.trim() || 'Local Neighborhood',
         deposit,
         imageUrl: finalImageUrl,
+        lat: Number(formData.lat) || 12.9716,
+        lng: Number(formData.lng) || 77.5946,
       });
     } finally {
       setIsSubmitting(false);
@@ -41,11 +56,14 @@ export default function AddToolModal({ onClose, onAddTool }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full shadow-xl border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] shadow-xl border border-slate-100 overflow-y-auto">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-900">+ List a New Tool</h2>
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 bg-white z-10">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">+ List a New Tool</h2>
+            <p className="text-xs text-slate-500">Set tool details & precise pickup location on the map</p>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -103,6 +121,28 @@ export default function AddToolModal({ onClose, onAddTool }) {
               />
             </div>
           </div>
+
+          {/* Location Details Header */}
+          <div className="border-t border-slate-100 pt-3">
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Pickup Location Name / Area *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g., Koramangala, Bengaluru or Sector 4, HSR Layout"
+              value={formData.locationName}
+              onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Interactive Map Picker */}
+          <LocationPickerMap
+            lat={formData.lat}
+            lng={formData.lng}
+            onChange={({ lat, lng }) => setFormData((prev) => ({ ...prev, lat, lng }))}
+          />
 
           {/* Image URL Input */}
           <div>

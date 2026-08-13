@@ -1,5 +1,15 @@
 'use client';
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const LocationPickerMap = dynamic(() => import('../map/LocationPickerMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 text-xs">
+      Loading Location Map Picker...
+    </div>
+  ),
+});
 
 export default function EditToolModal({ tool, onClose, onUpdateTool }) {
   const fallbackImg = 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&q=80&w=600';
@@ -7,8 +17,10 @@ export default function EditToolModal({ tool, onClose, onUpdateTool }) {
     title: tool?.title || '',
     category: tool?.category || 'Power Tools',
     deposit: tool?.deposit || '',
-    distance: tool?.distance || '0.5 km away',
+    locationName: tool?.locationName || 'Koramangala, Bengaluru',
     imageUrl: tool?.imageUrl || fallbackImg,
+    lat: tool?.lat || 12.9716,
+    lng: tool?.lng || 77.5946,
   });
 
   const handleSubmit = (e) => {
@@ -25,12 +37,14 @@ export default function EditToolModal({ tool, onClose, onUpdateTool }) {
     onUpdateTool(targetId, {
       ...formData,
       deposit: Number(formData.deposit),
+      lat: Number(formData.lat) || 12.9716,
+      lng: Number(formData.lng) || 77.5946,
     });
   };
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto shadow-xl border border-slate-100">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-slate-800">Edit Tool Listing</h3>
           <button 
@@ -81,6 +95,23 @@ export default function EditToolModal({ tool, onClose, onUpdateTool }) {
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Pickup Location Name / Area</label>
+            <input 
+              type="text" 
+              required
+              value={formData.locationName}
+              onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+            />
+          </div>
+
+          <LocationPickerMap
+            lat={formData.lat}
+            lng={formData.lng}
+            onChange={({ lat, lng }) => setFormData((prev) => ({ ...prev, lat, lng }))}
+          />
 
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">Image URL</label>

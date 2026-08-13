@@ -5,6 +5,7 @@ const ToolSchema = new mongoose.Schema({
   category: { type: String, required: true },
   deposit: { type: Number, required: true },
   distance: { type: String, default: '0.5 km away' },
+  locationName: { type: String, default: 'Koramangala, Bengaluru' },
   status: { type: String, enum: ['Available', 'Booked'], default: 'Available' },
   imageUrl: { type: String, default: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&q=80&w=600' },
   lat: { type: Number, required: true },

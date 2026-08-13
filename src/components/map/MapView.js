@@ -105,15 +105,18 @@ export default function MapView({ tools = [], onSelectTool }) {
           return (
             <Marker key={tool._id || tool.id} position={[tool.lat, tool.lng]}>
               <Popup>
-                <div className="p-1 text-center">
-                  <h4 className="font-bold text-slate-800 text-sm">{tool.title}</h4>
-                  <p className="text-xs text-slate-500 mb-2">₹{tool.deposit} Deposit</p>
+                <div className="p-1.5 text-center min-w-[150px]">
+                  <h4 className="font-bold text-slate-900 text-sm">{tool.title}</h4>
+                  <p className="text-xs text-emerald-700 font-semibold mt-0.5">
+                    📍 {tool.locationName || 'Available Locally'}
+                  </p>
+                  <p className="text-xs text-slate-500 mb-2 font-medium">₹{tool.deposit} Deposit</p>
                   <button
                     type="button"
                     onClick={() => onSelectTool && onSelectTool(tool)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded-lg font-medium cursor-pointer"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer shadow-sm transition"
                   >
-                    View Details
+                    Request to Borrow
                   </button>
                 </div>
               </Popup>
